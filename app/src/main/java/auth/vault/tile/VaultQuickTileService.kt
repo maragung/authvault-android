@@ -1,7 +1,5 @@
 package auth.vault.tile
 
-import android.app.PendingIntent
-import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -9,7 +7,7 @@ import androidx.annotation.RequiresApi
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.SingletonComponent
+import dagger.hilt.components.SingletonComponent
 import auth.vault.data.local.dao.TokenDao
 import auth.vault.domain.usecase.TotpGenerator
 import auth.vault.util.TimeSource
@@ -33,7 +31,6 @@ class VaultQuickTileService : TileService() {
         updateTileState()
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onClick() {
         super.onClick()
         runCatching {
