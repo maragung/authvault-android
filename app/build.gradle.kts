@@ -66,6 +66,15 @@ android {
 
     kotlin {
         jvmToolchain(17)
+        sourceSets.all {
+            languageSettings {
+                optIn("androidx.compose.material3.ExperimentalMaterial3Api")
+                optIn("com.google.accompanist.permissions.ExperimentalPermissionsApi")
+                optIn("androidx.camera.core.ExperimentalGetImage")
+                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+                optIn("androidx.compose.foundation.ExperimentalFoundationApi")
+            }
+        }
     }
 
     buildFeatures {

@@ -1,13 +1,27 @@
 package auth.vault.tile
 
+import android.app.PendingIntent
+import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import auth.vault.data.local.database.VaultDatabase
+import androidx.annotation.RequiresApi
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.components.SingletonComponent
+import auth.vault.data.local.dao.TokenDao
 import auth.vault.domain.usecase.TotpGenerator
 import auth.vault.util.TimeSource
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface VaultTileServiceEntryPoint {
+    fun tokenDao(): TokenDao
+}
 
 class VaultQuickTileService : TileService() {
 
@@ -19,11 +33,16 @@ class VaultQuickTileService : TileService() {
         updateTileState()
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onClick() {
         super.onClick()
         runCatching {
-            val database = VaultDatabase.getInstance(this, ByteArray(32))
-            val tokens = runBlocking { database.tokenDao().getAllTokens().first() }
+            val entryPoint = EntryPointAccessors.fromApplication(
+                applicationContext,
+                VaultTileServiceEntryPoint::class.java
+            )
+            val tokenDao = entryPoint.tokenDao()
+            val tokens = runBlocking { tokenDao.getAllTokens().first() }
             if (tokens.isNotEmpty()) {
                 val adjustedTime = timeSource.currentSeconds()
                 val firstToken = tokens.first()
@@ -36,19 +55,27 @@ class VaultQuickTileService : TileService() {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 clipboard.setPrimaryClip(android.content.ClipData.newPlainText("AuthVault OTP", code))
             }
+        }.onFailure {
+            Timber.e(it, "Failed to copy OTP from quick tile")
         }
         updateTileState()
     }
 
     private fun updateTileState() {
         runCatching {
-            val database = VaultDatabase.getInstance(this, ByteArray(32))
-            val tokenCount = runBlocking { database.tokenDao().getTokenCount().first() }
+            val entryPoint = EntryPointAccessors.fromApplication(
+                applicationContext,
+                VaultTileServiceEntryPoint::class.java
+            )
+            val tokenDao = entryPoint.tokenDao()
+            val tokenCount = runBlocking { tokenDao.getTokenCount().first() }
             qsTile?.apply {
                 state = if (tokenCount > 0) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
                 label = "AuthVault"
                 updateTile()
             }
+        }.onFailure {
+            Timber.e(it, "Failed to update tile state")
         }
     }
 }

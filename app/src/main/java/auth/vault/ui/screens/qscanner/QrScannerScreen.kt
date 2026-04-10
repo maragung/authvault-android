@@ -5,7 +5,9 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.Log
 import android.util.Size
+import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -93,7 +95,7 @@ import kotlin.coroutines.suspendCoroutine
 
 private const val TAG = "QrScannerScreen"
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class, ExperimentalGetImage::class)
 @Composable
 fun QrScannerScreen(
     onNavigateBack: () -> Unit,
